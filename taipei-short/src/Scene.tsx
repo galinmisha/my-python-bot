@@ -2,27 +2,27 @@ import React from 'react';
 import {AbsoluteFill, Audio, Sequence, staticFile, useCurrentFrame} from 'remotion';
 import {DUR, FPS, HAS_VO, T} from './config';
 import {HP, L, R, SOFT, sim, ss, XPLATE} from './sim';
-import {chunks} from './captions';
+import {chunks as DEFAULT_CHUNKS, Chunk} from './captions';
 
 const INK = '#111';
 const SW = 7;
-const clamp = (x: number, a = 0, b = 1) => Math.min(b, Math.max(a, x));
-const lerp = (a: number, b: number, u: number) => a + (b - a) * u;
-const eio = (u: number) => (u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2);
+export const clamp = (x: number, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+export const lerp = (a: number, b: number, u: number) => a + (b - a) * u;
+export const eio = (u: number) => (u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2);
 const eoc = (u: number) => 1 - Math.pow(1 - u, 3);
-const seg = (t: number, a: number, b: number) => clamp((t - a) / (b - a));
+export const seg = (t: number, a: number, b: number) => clamp((t - a) / (b - a));
 // damped spring pop 0->1 with overshoot
-const pop = (t: number, t0: number) => {
+export const pop = (t: number, t0: number) => {
   const d = t - t0;
   if (d <= 0) return 0;
   return 1 - Math.exp(-7 * d) * Math.cos(15 * d);
 };
-const mix = (a: string, b: string, u: number) => {
+export const mix = (a: string, b: string, u: number) => {
   const pa = [1, 3, 5].map((i) => parseInt(a.slice(i, i + 2), 16));
   const pb = [1, 3, 5].map((i) => parseInt(b.slice(i, i + 2), 16));
   return `rgb(${pa.map((v, i) => Math.round(v + (pb[i] - v) * u)).join(',')})`;
 };
-const rnd = (n: number) => {
+export const rnd = (n: number) => {
   const x = Math.sin(n * 127.1 + 311.7) * 43758.5453;
   return x - Math.floor(x);
 };
@@ -356,7 +356,8 @@ const Cloud: React.FC<{x: number; y: number; s: number}> = ({x, y, s}) => (
 const CAP_FONT = 80;
 const CAP_Y = 1330;
 const CAP_MAX_W = 940;
-const Captions: React.FC<{t: number}> = ({t}) => {
+export const Captions: React.FC<{t: number; data?: Chunk[]}> = ({t, data}) => {
+  const chunks = data ?? DEFAULT_CHUNKS;
   const c = chunks.find((k, i) => t >= k.t0 && t < (chunks[i + 1] && chunks[i + 1].t0 - k.t1 < 0.35 ? chunks[i + 1].t0 : k.t1 + 0.12));
   if (!c) return null;
   const chars = c.words.map((w) => w.w).join(' ').length;

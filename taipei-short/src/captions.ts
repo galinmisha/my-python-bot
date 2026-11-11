@@ -15,9 +15,10 @@ const PHRASES: {t0: number; t1: number; text: string}[] = [
   {t0: 19.77, t1: 21.08, text: 'it just calms the sway.'},
 ];
 
-export const chunks: Chunk[] = (() => {
+export type Phrase = {t0: number; t1: number; text: string};
+export const buildChunks = (PH: Phrase[]): Chunk[] => {
   const out: Chunk[] = [];
-  for (const p of PHRASES) {
+  for (const p of PH) {
     const ws = p.text.split(' ');
     const weights = ws.map((w) => w.replace(/[^\w]/g, '').length + 2);
     const total = weights.reduce((a, b) => a + b, 0);
@@ -37,4 +38,5 @@ export const chunks: Chunk[] = (() => {
     }
   }
   return out;
-})();
+};
+export const chunks: Chunk[] = buildChunks(PHRASES);

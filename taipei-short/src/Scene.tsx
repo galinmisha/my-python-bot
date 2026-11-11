@@ -350,14 +350,22 @@ const Cloud: React.FC<{x: number; y: number; s: number}> = ({x, y, s}) => (
   </g>
 );
 
+// Caption style from the research: bold sans-serif, ~7% of frame height, max 3 words, centred,
+// white + thick dark outline, active word highlighted, placed inside the ~984x1500 centred safe area
+// and well above the bottom ~380 px that the Shorts UI covers. Sizes are rules of thumb, not an official spec.
+const CAP_FONT = 80;
+const CAP_Y = 1330;
+const CAP_MAX_W = 940;
 const Captions: React.FC<{t: number}> = ({t}) => {
   const c = chunks.find((k, i) => t >= k.t0 && t < (chunks[i + 1] && chunks[i + 1].t0 - k.t1 < 0.35 ? chunks[i + 1].t0 : k.t1 + 0.12));
   if (!c) return null;
-  const k = 0.92 + 0.08 * pop(t, c.t0);
+  const chars = c.words.map((w) => w.w).join(' ').length;
+  const fit = Math.min(1, CAP_MAX_W / (chars * CAP_FONT * 0.68));
+  const k = (0.92 + 0.08 * pop(t, c.t0)) * fit;
   const text = c.words.map((w, i) => ({...w, i}));
   return (
-    <g transform={`translate(540 1400) scale(${k})`}>
-      <text textAnchor="middle" fontFamily="Arial Black, Impact, Arial, sans-serif" fontWeight={900} fontSize={86} style={{paintOrder: 'stroke'}} stroke={INK} strokeWidth={22} strokeLinejoin="round">
+    <g transform={`translate(540 ${CAP_Y}) scale(${k})`}>
+      <text textAnchor="middle" fontFamily="Arial Black, Impact, Arial, sans-serif" fontWeight={900} fontSize={CAP_FONT} style={{paintOrder: 'stroke'}} stroke={INK} strokeWidth={20} strokeLinejoin="round">
         {text.map((w) => (
           <tspan key={w.i} fill={t >= w.t0 && t < w.t1 + 0.02 ? '#FFD84A' : '#fff'}>
             {w.w}

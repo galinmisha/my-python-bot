@@ -4,7 +4,7 @@ Vertical 1080x1920 @ 60 fps cartoon Short, drawn entirely in SVG/React (no AI pi
 
 - `src/Scene.tsx` drawing + camera, `src/sim.ts` pendulum physics, `src/config.ts` beat times + `HAS_VO` switch
 - `tools/sfx.py` builds `public/taipei/sfx.wav` from `tools/impacts.json` (run `npx tsx tools/impacts.ts` first)
-- Voice: not added yet. Put it at `public/taipei/vo/take1.mp3`, set `HAS_VO = true`, re-time `T` in `src/config.ts`.
+- Voice: `public/taipei/vo/take1.mp3` (ElevenLabs "Jerry B.", eleven_v4, 21.3 s). Beat times in `src/config.ts` were measured from it with ffmpeg silencedetect. Loudness-normalise the render with `ffmpeg -i in.mp4 -c:v copy -af loudnorm=I=-14:TP=-1.5:LRA=7 out.mp4`.
 
 ```bash
 npm install

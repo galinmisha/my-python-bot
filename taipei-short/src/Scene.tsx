@@ -105,7 +105,7 @@ const Eye: React.FC<{x: number; look: {x: number; y: number}; lid: number; squee
 };
 const Ball: React.FC<{t: number; alpha: number; speed: number; sq: number}> = ({t, alpha, speed, sq}) => {
   const open = pop(t, T.eyes);
-  const blink = [8.0, 11.7, 17.9, 20.9, 21.7].some((b) => t > b && t < b + 0.12) ? 1 : 0;
+  const blink = [8.2, 12.6, 17.5, 20.5].some((b) => t > b && t < b + 0.12) ? 1 : 0;
   const nearImpact = sim().impacts.some((i) => t >= i.t && t < i.t + 0.28) && t > T.heat0 - 0.1;
   const wind = t > T.windOn + 0.3 && t < T.windOff + 0.6;
   const smug = t > T.smug;
@@ -114,7 +114,7 @@ const Ball: React.FC<{t: number; alpha: number; speed: number; sq: number}> = ({
   const lid = blink ? 1 : smug ? 0.45 : wind ? 0.12 : 0;
   const browY = smug ? -3 : wind ? -9 : -12;
   const browTilt = wind ? 16 : smug ? 4 : 0;
-  const k = open * (1 - ss(21.3, 22.3, t));
+  const k = open * (1 - ss(DUR - 1.0, DUR - 0.1, t));
   return (
     <g transform={`rotate(${(alpha * 180) / Math.PI * 0.4})`}>
       <g transform={`scale(${1 + sq * 0.14} ${1 - sq * 0.1})`}>
@@ -157,8 +157,8 @@ const Ball: React.FC<{t: number; alpha: number; speed: number; sq: number}> = ({
 // ---------- character ----------
 const Hero: React.FC<{t: number}> = ({t}) => {
   const breathe = 1 + 0.009 * Math.sin((2 * Math.PI * 14 * t) / DUR);
-  const pointing = t < 8 || t > 20.3;
-  const qPop = t < 4 ? 1 - seg(t, 3.7, 4.0) : pop(t, 21.0) * seg(t, 21.0, 21.05);
+  const pointing = t < T.windOn - 0.5 || t > T.zoomOut1 - 0.3;
+  const qPop = t < 5 ? 1 - seg(t, T.zoomIn0 - 0.5, T.zoomIn0 - 0.2) : pop(t, T.zoomOut1 - 0.1) * seg(t, T.zoomOut1 - 0.1, T.zoomOut1 - 0.05);
   const qk = clamp(qPop, 0, 1.15);
   const armUp = pointing;
   return (
@@ -266,13 +266,13 @@ const Tower: React.FC<{t: number; thetaRad: number; psi: number; impacts: {t: nu
       <g clipPath="url(#win)">
         <rect x={-120} y={-990} width={240} height={26} fill="#34506B" />
         {/* heat glow when dampers work */}
-        {t > T.heat0 && t < 19.5 ? (
-          <ellipse cx={0} cy={-870} rx={130} ry={110} fill="#FF8A3D" opacity={0.07 * seg(t, T.heat0, T.heat0 + 0.8) * (1 - seg(t, 18, 19.5))} />
+        {t > T.heat0 && t < T.calm0 + 1.5 ? (
+          <ellipse cx={0} cy={-870} rx={130} ry={110} fill="#FF8A3D" opacity={0.07 * seg(t, T.heat0, T.heat0 + 0.8) * (1 - seg(t, T.calm0 - 1, T.calm0 + 1.5))} />
         ) : null}
         {/* damper bodies + plates */}
         {[-1, 1].map((sd) => {
           const comp = sd === -1 ? sqL : sqR;
-          const heat = ss(T.heat0, T.heat0 + 1, t) * (1 - ss(18, 19.6, t));
+          const heat = ss(T.heat0, T.heat0 + 1, t) * (1 - ss(T.calm0 - 1, T.calm0 + 0.6, t));
           return (
             <g key={sd}>
               <rect x={sd === -1 ? -120 : 96} y={-896} width={24} height={52} fill={mix('#8791A0', '#E2713A', heat)} stroke={INK} strokeWidth={5} />
@@ -343,7 +343,7 @@ export const Scene: React.FC = () => {
   const S = sim();
   const idx = Math.min(S.phi.length - 1, frame);
   // blend the pendulum to rest at the very end so the last frame loops to frame 0
-  const endBlend = 1 - ss(21.4, 22.5, t);
+  const endBlend = 1 - ss(DUR - 1.3, DUR - 0.2, t);
   const psi = S.phi[idx] * endBlend;
   const thetaRad = S.th[idx];
   const cam = camAt(t);
@@ -354,7 +354,7 @@ export const Scene: React.FC = () => {
   const impactsB = S.impacts.filter((i) => i.t > T.heat0 - 0.2);
 
   const farBlur = 3.4 * clamp((zoom - 1) / 1.2);
-  const tagK = pop(t, T.tag) * (1 - seg(t, 7.9, 8.2));
+  const tagK = pop(t, T.tag) * (1 - seg(t, T.windOn - 0.8, T.windOn - 0.5));
 
   // heat + steam clusters, anchored in tower-local space near the damper on the impact side
   const clusters = impactsB.flatMap((im, i) => {
@@ -370,7 +370,7 @@ export const Scene: React.FC = () => {
     <AbsoluteFill style={{background: '#BFE6FF'}}>
       {HAS_VO ? <Audio src={staticFile('taipei/vo/take1.mp3')} startFrom={0} /> : null}
       <Sequence from={0}>
-        <Audio src={staticFile('taipei/sfx.wav')} volume={0.9} />
+        <Audio src={staticFile('taipei/sfx.wav')} volume={0.6} />
       </Sequence>
       <svg width={1080} height={1920} viewBox="0 0 1080 1920" style={{position: 'absolute', inset: 0}}>
         <defs>

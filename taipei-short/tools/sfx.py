@@ -1,5 +1,5 @@
 import json, numpy as np, wave
-SR=48000; DUR=22.6
+SR=48000; DUR=22.0
 rng=np.random.default_rng(7)
 out=np.zeros(int(SR*DUR))
 def add(t0, x, db):
@@ -35,9 +35,9 @@ def wind(t0,t1,db):
     e=np.minimum(1,np.arange(len(n))/SR/1.2)*np.minimum(1,(len(n)-np.arange(len(n)))/SR/1.2)
     mod=0.6+0.4*np.sin(2*np.pi*0.5*np.arange(len(n))/SR)
     x=y2*e*mod; add(t0,x/np.abs(x).max(),db)
-whoosh(1.5,-16,4.1); whoosh(1.9,-17,18.2)
-pop(-14,5.3); pop(-12,6.7)
-wind(8.2,14.2,-20)
+whoosh(1.5,-16,4.5); whoosh(1.9,-17,19.0)
+pop(-14,6.05); pop(-12,6.9)
+wind(9.6,15.2,-20)
 for im in json.load(open('tools/impacts.json')):
     thud(-10,im['t']); hiss(1.4,-24,im['t']+0.12)
 out*=0.75/np.abs(out).max()

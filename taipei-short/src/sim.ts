@@ -1,4 +1,4 @@
-import {DUR, FPS} from './config';
+import {DUR, FPS, T} from './config';
 
 export const ss = (a: number, b: number, t: number) => {
   const u = Math.min(1, Math.max(0, (t - a) / (b - a)));
@@ -7,10 +7,11 @@ export const ss = (a: number, b: number, t: number) => {
 
 // Tower tilt (radians, + = top moves right). Cartoon-exaggerated.
 export const theta = (t: number) => {
-  const breeze = 0.006 * Math.sin(2 * Math.PI * 0.4 * t) * ss(0, 2, t) * (1 - ss(21, 22.4, t));
-  const lean = 0.035 * ss(8.3, 9.6, t) * (1 - ss(12.8, 14.4, t));
-  const amp = 0.032 * ss(8.3, 10.5, t) * (1 - 0.72 * ss(14, 17.5, t)) * (1 - ss(20.6, 22.4, t));
-  return breeze + lean + amp * Math.sin(2 * Math.PI * 0.5 * (t - 8.3));
+  const W = T.windOn;
+  const breeze = 0.006 * Math.sin(2 * Math.PI * 0.4 * t) * ss(0, 2, t) * (1 - ss(DUR - 1.6, DUR - 0.4, t));
+  const lean = 0.035 * ss(W, W + 1.3, t) * (1 - ss(W + 4.5, W + 6.1, t));
+  const amp = 0.032 * ss(W, W + 2.2, t) * (1 - 0.72 * ss(W + 5.7, W + 9.2, t)) * (1 - ss(DUR - 1.8, DUR - 0.2, t));
+  return breeze + lean + amp * Math.sin(2 * Math.PI * 0.5 * (t - W));
 };
 
 export const HP = 980; // pivot height in tower-local px
@@ -41,7 +42,7 @@ export const sim = (): SimOut => {
     for (let s = 0; s < sub; s++) {
       const t = i / FPS + s * dt;
       const ddth = (theta(t + h) - 2 * theta(t) + theta(t - h)) / (h * h);
-      const c = 0.28 + 0.75 * ss(13.9, 14.8, t) + 1.8 * ss(18.6, 19.6, t);
+      const c = 0.28 + 0.75 * ss(T.heat0, T.heat0 + 0.9, t) + 1.8 * ss(T.calm0, T.calm0 + 1, t);
       const pen = Math.max(0, Math.abs(psi) - SOFT); // dampers: soft zone with spring + extra drag
       const sg = psi > 0 ? 1 : -1;
       const acc =

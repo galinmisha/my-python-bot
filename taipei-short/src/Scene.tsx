@@ -2,6 +2,7 @@ import React from 'react';
 import {AbsoluteFill, Audio, Sequence, staticFile, useCurrentFrame} from 'remotion';
 import {DUR, FPS, HAS_VO, T} from './config';
 import {HP, L, R, SOFT, sim, ss, XPLATE} from './sim';
+import {chunks} from './captions';
 
 const INK = '#111';
 const SW = 7;
@@ -31,12 +32,24 @@ const BASE_X = 540;
 const BASE_Y = 1760;
 const SC = 1.15; // tower scale
 
+const OPEN_S = 2.2; // opening: close on the ball, then pull out
 const camAt = (t: number) => {
+  const open = 1 - eio(seg(t, 0.15, 1.8)); // 1 = close-up, 0 = wide
   const u1 = eio(seg(t, T.zoomIn0, T.zoomIn1));
   const u2 = eio(seg(t, T.zoomOut0, T.zoomOut1));
-  const u = u1 * (1 - u2);
-  const s = Math.exp(lerp(Math.log(1), Math.log(2.5), u));
-  return {s, cx: 540, cy: lerp(960, 800, u)};
+  const back = eio(seg(t, T.zoomOut1 + 0.3, DUR)); // push back in so the last frame matches frame 0
+  const wideToZoom = Math.max(u1 * (1 - u2), 0);
+  const lg = (u: number, sFar: number) => lerp(Math.log(1), Math.log(sFar), u);
+  let ls = lg(wideToZoom, 2.5);
+  let cy = lerp(960, 800, wideToZoom);
+  if (t < T.zoomIn0) {
+    ls = lg(open, OPEN_S);
+    cy = lerp(960, 800, open);
+  } else if (t > T.zoomOut1) {
+    ls = lg(back, OPEN_S);
+    cy = lerp(960, 800, back);
+  }
+  return {s: Math.exp(ls), cx: 540, cy};
 };
 const camTransform = (c: {s: number; cx: number; cy: number}, d: number) => {
   const s = 1 + (c.s - 1) * d;
@@ -337,6 +350,25 @@ const Cloud: React.FC<{x: number; y: number; s: number}> = ({x, y, s}) => (
   </g>
 );
 
+const Captions: React.FC<{t: number}> = ({t}) => {
+  const c = chunks.find((k, i) => t >= k.t0 && t < (chunks[i + 1] && chunks[i + 1].t0 - k.t1 < 0.35 ? chunks[i + 1].t0 : k.t1 + 0.12));
+  if (!c) return null;
+  const k = 0.92 + 0.08 * pop(t, c.t0);
+  const text = c.words.map((w, i) => ({...w, i}));
+  return (
+    <g transform={`translate(540 1400) scale(${k})`}>
+      <text textAnchor="middle" fontFamily="Arial Black, Impact, Arial, sans-serif" fontWeight={900} fontSize={86} style={{paintOrder: 'stroke'}} stroke={INK} strokeWidth={22} strokeLinejoin="round">
+        {text.map((w) => (
+          <tspan key={w.i} fill={t >= w.t0 && t < w.t1 + 0.02 ? '#FFD84A' : '#fff'}>
+            {w.w}
+            {w.i < text.length - 1 ? ' ' : ''}
+          </tspan>
+        ))}
+      </text>
+    </g>
+  );
+};
+
 export const Scene: React.FC = () => {
   const frame = useCurrentFrame();
   const t = frame / FPS;
@@ -408,6 +440,7 @@ export const Scene: React.FC = () => {
           })}
           <Hero t={t} />
         </g>
+        <Captions t={t} />
         {/* weight tag (screen space) */}
         <g transform={`translate(540 300) scale(${tagK * 1.0})`} opacity={tagK > 0.01 ? 1 : 0}>
           <rect x={-170} y={-50} width={340} height={100} rx={26} fill="#FFD84A" stroke={INK} strokeWidth={8} />

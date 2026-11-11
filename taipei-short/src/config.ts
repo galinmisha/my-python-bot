@@ -19,6 +19,6 @@ export const T = {
   heat0: 14.5, // "That swing soaks up"
   calm0: 19.0,
   zoomOut0: 19.0,
-  zoomOut1: 21.0,
+  zoomOut1: 20.4,
   smug: 19.8, // "it just calms the sway"
 };
